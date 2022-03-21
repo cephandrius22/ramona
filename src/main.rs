@@ -31,9 +31,28 @@ fn unit_vector(v: Vec3) -> Vec3 {
     v / v.length()
 }
 
+
+fn hit_sphere(center: Point3, radius: f32, ray: &Ray) -> f32 {
+    let oc: Vec3 = ray.origin - center;
+    let a = ray.direction * ray.direction;
+    let half_b = oc * ray.direction;
+    let c = (oc * oc) - (radius * radius);
+    let discriminant: f32 = (half_b * half_b) - (a * c);
+    if discriminant < 0.0 {
+        return -1.0;
+    } else {
+        return (-half_b - f32::sqrt(discriminant)) / a;
+    }
+}
+
 fn color_pixel(ray: &Ray) -> Vec3 {
+    let mut t = hit_sphere(Point3 {x: 0.0, y: 0.0, z: -1.0}, 0.5, ray);
+    if t > 0.0 {
+        let normal = unit_vector(ray.at(t) - Vec3{x: 0.0, y: 0.0, z: -1.0});
+        return Vec3{x: normal.x + 1.0, y: normal.y + 1.0, z: normal.z + 1.0} * 0.5;
+    }
     let unit_direction = unit_vector(ray.direction);
-    let t = 0.5 * (unit_direction.y + 1.0);
+    t = 0.5 * (unit_direction.y + 1.0);
     Vec3{x: 1.0, y: 1.0, z: 1.0} * (1.0 - t) + Vec3{x: 0.5, y: 0.7, z: 1.0} * (t)
 }
 
@@ -84,6 +103,7 @@ fn main() -> Result<(), Error> {
                 let u = x as f32 / (WIDTH - 1) as f32;
                 let v = y as f32 / (HEIGHT - 1) as f32;
                 let ray = Ray {origin: origin, direction: lower_left_corner + horizontal * u + vertical * v - origin};
+
                 let color = color_pixel(&ray);
                 let ir = (255.9999 * color.x) as u8;
                 let ig = (255.9999 * color.y) as u8;

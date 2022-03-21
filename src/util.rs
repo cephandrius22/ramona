@@ -12,8 +12,11 @@ pub struct Vec3 {
 
 impl Vec3 {
     pub fn length(self) -> f32 {
-        let sum: f32 = self.x.powf(2.0) + self.y.powf(2.0) + self.z.powf(2.0);
-        f32::sqrt(sum)
+        f32::sqrt(self.length_squared())
+    }
+
+    pub fn length_squared(self) -> f32 {
+        self.x * self.x + self.y * self.y + self.z * self.z
     }
 }
 
@@ -67,7 +70,7 @@ pub struct Ray {
 }
 
 impl Ray {
-    fn at(self, t: f32) -> Point3 {
+    pub fn at(self, t: f32) -> Point3 {
         self.origin + (self.direction * t)
     }
 }
