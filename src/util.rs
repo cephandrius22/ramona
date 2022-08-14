@@ -149,6 +149,8 @@ impl Hittable for Sphere {
         let c = (oc.length_squared()) - (self.radius * self.radius);
 
         let discriminant: f32 = (half_b * half_b) - (a * c);
+
+        // no roots (negative discriminant) = no intersction
         if discriminant < 0.0 { return false; }
         let sqrtd = f32::sqrt(discriminant);
 
@@ -188,6 +190,8 @@ impl HittableList {
     }
 
     pub fn add(&mut self, object: impl Hittable + 'static) {
+        // I'm not 100% clear on if this is the correct way to do
+        // this.
         self.objects.push(Box::new(object) as Box<dyn Hittable>);
     }
 }
