@@ -11,7 +11,7 @@ use winit_input_helper::WinitInputHelper;
 
 // I'm not sure that I'm doing this correctly.
 mod util;
-use util::{HitRecord, Hittable, HittableList, Point3, Ray, Sphere, Vec3};
+use util::{HitRecord, Hittable, HittableList, Ray, Sphere, Vec3};
 
 mod camera;
 use camera::Camera;
@@ -84,18 +84,6 @@ fn main() -> Result<(), Error> {
 
     let samples_per_pixel = 10;
 
-    // let aspect_ratio: f32 = WIDTH as f32 / HEIGHT as f32;
-    // let focal_length: f32 = 1.0; // distance to camera
-
-    // let viewport_height = 2.0;
-    // let viewport_width = aspect_ratio * viewport_height;
-
-    // let origin = Point3::new(0.0, 0.0, 0.0);
-    // let horizontal = Vec3::new(viewport_width, 0.0, 0.0);
-    // let vertical = Vec3::new(0.0, viewport_height, 0.0);
-    // let lower_left_corner =
-    //     origin - (horizontal / 2.0) - (vertical / 2.0) - Vec3::new(0.0, 0.0, focal_length);
-
     let camera = Camera::new();
 
     let mut world = HittableList::new();
@@ -106,7 +94,6 @@ fn main() -> Result<(), Error> {
     event_loop.run(move |event, _, control_flow| {
         // Draw the current frame
         if let Event::RedrawRequested(_) = event {
-            // world.draw(pixels.get_frame());
             let frame = pixels.get_frame();
             println!("Drawing");
             for (i, pixel) in frame.chunks_exact_mut(4).enumerate() {
@@ -118,27 +105,18 @@ fn main() -> Result<(), Error> {
                 let y = HEIGHT as i16 - y;
 
                 let mut pixel_color = Vec3::new(0.0, 0.0, 0.0);
-                for s in 0..samples_per_pixel {
+                for _s in 0..samples_per_pixel {
+                    // u and v are the how far, as a percentage, x and y are from
+                    // the vertical and horizontal of our viewport. This is used
+                    // to map our pixel coords to the "camera" coords.
                     let u = (x as f32 + rng.gen::<f32>()) as f32 / (WIDTH - 1) as f32;
                     let v = (y as f32 + rng.gen::<f32>()) as f32 / (HEIGHT - 1) as f32;
+
+                    // origin is the camera (0, 0 ,0) and direction is the point in
+                    // the viewport whose color value we are calculating.
                     let ray = camera.get_ray(u, v);
                     pixel_color += color_pixel(&ray, &world);
                 }
-                // let u = x as f32 / (WIDTH - 1) as f32;
-                // let v = y as f32 / (HEIGHT - 1) as f32;
-                // let ray = camera.get_ray(u, v);
-                // pixel_color += color_pixel(&ray, &world);
-
-                // u and v are the how far, as a percentage, x and y are from
-                // the vertical and horizontal of our viewport. This is used
-                // to map our pixel coords to the "camera" coords.
-
-                // origin is the camera (0, 0 ,0) and direction is the point in
-                // the viewport whose color value we are calculating.
-                // let ray = Ray {
-                //     origin: origin,
-                //     direction: lower_left_corner + horizontal * u + vertical * v - origin,
-                // };
 
                 let color = write_color(pixel_color, samples_per_pixel);
                 let ir = (color.x) as u8;

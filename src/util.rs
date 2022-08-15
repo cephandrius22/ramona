@@ -1,7 +1,7 @@
 #![deny(clippy::all)]
 #![forbid(unsafe_code)]
 
-use std::ops::{Add, Div, Mul, Neg, Sub, AddAssign};
+use std::ops::{Add, AddAssign, Div, Mul, Neg, Sub};
 
 #[derive(Copy, Clone, Debug, Default)]
 pub struct Vec3 {
@@ -12,7 +12,7 @@ pub struct Vec3 {
 
 impl Vec3 {
     pub fn new(x: f32, y: f32, z: f32) -> Vec3 {
-        Vec3 { x: x, y: y, z: z }
+        Vec3 { x, y, z }
     }
 
     pub fn length(self) -> f32 {
@@ -147,8 +147,8 @@ pub struct Sphere {
 impl Sphere {
     pub fn new(center: Point3, radius: f32) -> Sphere {
         Sphere {
-            center: center,
-            radius: radius,
+            center,
+            radius,
         }
     }
 }
@@ -201,10 +201,6 @@ impl HittableList {
         }
     }
 
-    pub fn clear(&mut self) {
-        self.objects.clear();
-    }
-
     pub fn add(&mut self, object: impl Hittable + 'static) {
         // I'm not 100% clear on if this is the correct way to do
         // this.
@@ -218,7 +214,7 @@ impl Hittable for HittableList {
         let mut hit_anything = false;
         let mut closest_so_far = t_max;
 
-        for object in self.objects.iter() {
+        for object in &self.objects {
             if object.hit(ray, t_min, closest_so_far, &mut temp_rec) {
                 hit_anything = true;
                 closest_so_far = temp_rec.t;

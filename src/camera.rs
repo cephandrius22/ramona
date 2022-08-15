@@ -26,12 +26,7 @@ impl Camera {
         let lower_left_corner =
             origin - (horizontal / 2.0) - (vertical / 2.0) - Vec3::new(0.0, 0.0, focal_length);
 
-        Camera {
-            origin: origin,
-            horizontal: horizontal,
-            vertical: vertical,
-            lower_left_corner: lower_left_corner,
-        }
+        Camera { origin, lower_left_corner, horizontal,vertical, }
     }
 
     pub fn get_ray(self, u: f32, v: f32) -> Ray {
