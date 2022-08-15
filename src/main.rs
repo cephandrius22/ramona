@@ -16,6 +16,8 @@ use util::{HitRecord, Hittable, HittableList, Point3, Ray, Sphere, Vec3};
 mod camera;
 use camera::Camera;
 
+use rand::Rng;
+
 const WIDTH: u32 = 800;
 const HEIGHT: u32 = 450;
 
@@ -100,12 +102,13 @@ fn main() -> Result<(), Error> {
     world.add(Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5));
     world.add(Sphere::new(Vec3::new(0.0, -100.5, -1.0), 100.0));
 
+    let mut rng = rand::thread_rng();
     event_loop.run(move |event, _, control_flow| {
         // Draw the current frame
         if let Event::RedrawRequested(_) = event {
             // world.draw(pixels.get_frame());
             let frame = pixels.get_frame();
-
+            println!("Drawing");
             for (i, pixel) in frame.chunks_exact_mut(4).enumerate() {
                 // x and y are pixel coordinates
                 let x = (i % WIDTH as usize) as i16;
@@ -115,16 +118,16 @@ fn main() -> Result<(), Error> {
                 let y = HEIGHT as i16 - y;
 
                 let mut pixel_color = Vec3::new(0.0, 0.0, 0.0);
-                // for s in 0..samples_per_pixel {
-                //     let u = x as f32 / (WIDTH - 1) as f32;
-                //     let v = y as f32 / (HEIGHT - 1) as f32;
-                //     let ray = camera.get_ray(u, v);
-                //     pixel_color += color_pixel(&ray, &world);
-                // }
-                let u = x as f32 / (WIDTH - 1) as f32;
-                let v = y as f32 / (HEIGHT - 1) as f32;
-                let ray = camera.get_ray(u, v);
-                pixel_color += color_pixel(&ray, &world);
+                for s in 0..samples_per_pixel {
+                    let u = (x as f32 + rng.gen::<f32>()) as f32 / (WIDTH - 1) as f32;
+                    let v = (y as f32 + rng.gen::<f32>()) as f32 / (HEIGHT - 1) as f32;
+                    let ray = camera.get_ray(u, v);
+                    pixel_color += color_pixel(&ray, &world);
+                }
+                // let u = x as f32 / (WIDTH - 1) as f32;
+                // let v = y as f32 / (HEIGHT - 1) as f32;
+                // let ray = camera.get_ray(u, v);
+                // pixel_color += color_pixel(&ray, &world);
 
                 // u and v are the how far, as a percentage, x and y are from
                 // the vertical and horizontal of our viewport. This is used
@@ -137,10 +140,10 @@ fn main() -> Result<(), Error> {
                 //     direction: lower_left_corner + horizontal * u + vertical * v - origin,
                 // };
 
-                // let color = color_pixel(&ray, &world);
-                let ir = (255.9999 * pixel_color.x) as u8;
-                let ig = (255.9999 * pixel_color.y) as u8;
-                let ib = (255.9999 * pixel_color.z) as u8;
+                let color = write_color(pixel_color, samples_per_pixel);
+                let ir = (color.x) as u8;
+                let ig = (color.y) as u8;
+                let ib = (color.z) as u8;
 
                 let rgba = [ir, ig, ib, 0xff];
 
