@@ -1,7 +1,7 @@
 #![deny(clippy::all)]
 #![forbid(unsafe_code)]
 
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use std::ops::{Add, Div, Mul, Neg, Sub, AddAssign};
 
 #[derive(Copy, Clone, Debug, Default)]
 pub struct Vec3 {
@@ -22,6 +22,10 @@ impl Vec3 {
     pub fn length_squared(self) -> f32 {
         self.x * self.x + self.y * self.y + self.z * self.z
     }
+
+    pub fn unit_vector(self) -> Vec3 {
+        self / self.length()
+    }
 }
 
 impl Add for Vec3 {
@@ -33,6 +37,14 @@ impl Add for Vec3 {
             y: self.y + rhs.y,
             z: self.z + rhs.z,
         }
+    }
+}
+
+impl AddAssign for Vec3 {
+    fn add_assign(&mut self, rhs: Vec3) {
+        self.x += rhs.x;
+        self.y += rhs.y;
+        self.z += rhs.z;
     }
 }
 
@@ -151,7 +163,9 @@ impl Hittable for Sphere {
         let discriminant: f32 = (half_b * half_b) - (a * c);
 
         // no roots (negative discriminant) = no intersction
-        if discriminant < 0.0 { return false; }
+        if discriminant < 0.0 {
+            return false;
+        }
         let sqrtd = f32::sqrt(discriminant);
 
         let mut root = (-half_b - sqrtd) / a;
@@ -182,7 +196,9 @@ pub struct HittableList {
 
 impl HittableList {
     pub fn new() -> HittableList {
-        HittableList { objects: Vec::new() }
+        HittableList {
+            objects: Vec::new(),
+        }
     }
 
     pub fn clear(&mut self) {
