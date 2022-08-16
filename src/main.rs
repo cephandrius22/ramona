@@ -18,8 +18,8 @@ use camera::Camera;
 
 use rand::Rng;
 
-const WIDTH: u32 = 800;
-const HEIGHT: u32 = 450;
+const WIDTH: u32 = 450;
+const HEIGHT: u32 = 200;
 
 fn clamp(x: f32, min: f32, max: f32) -> f32 {
     if x < min {
@@ -49,10 +49,21 @@ fn write_color(color: Vec3, samples_per_pixel: i32) -> Vec3 {
 }
 
 /// Determine the color of a pixel for a given ray.
-fn color_pixel(ray: &Ray, world: &HittableList) -> Vec3 {
+fn color_pixel(ray: &Ray, world: &HittableList, depth: i32) -> Vec3 {
     let mut rec: HitRecord = HitRecord::default();
+
+    if depth <= 0 {
+        return Vec3::new(0.0, 0.0, 0.0);
+    }
+
     if world.hit(*ray, 0.0, 99999999999.0, &mut rec) {
-        return Vec3::new(rec.normal.x + 1.0, rec.normal.y + 1.0, rec.normal.z + 1.0) * 0.5;
+        let target = rec.p + rec.normal + Vec3::random_in_unit_sphere();
+        let random_ray = Ray {
+            origin: rec.p,
+            direction: target - rec.p,
+        };
+        return color_pixel(&random_ray, world, depth - 1) * 0.5;
+        // return Vec3::new(rec.normal.x + 1.0, rec.normal.y + 1.0, rec.normal.z + 1.0) * 0.5;
     }
 
     let unit_direction = ray.direction.unit_vector();
@@ -82,7 +93,7 @@ fn main() -> Result<(), Error> {
         Pixels::new(WIDTH, HEIGHT, surface_texture)?
     };
 
-    let samples_per_pixel = 10;
+    let samples_per_pixel = 1;
 
     let camera = Camera::new();
 
@@ -115,7 +126,7 @@ fn main() -> Result<(), Error> {
                     // origin is the camera (0, 0 ,0) and direction is the point in
                     // the viewport whose color value we are calculating.
                     let ray = camera.get_ray(u, v);
-                    pixel_color += color_pixel(&ray, &world);
+                    pixel_color += color_pixel(&ray, &world, 50);
                 }
 
                 let color = write_color(pixel_color, samples_per_pixel);

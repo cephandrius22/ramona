@@ -3,6 +3,8 @@
 
 use std::ops::{Add, AddAssign, Div, Mul, Neg, Sub};
 
+use rand::Rng;
+
 #[derive(Copy, Clone, Debug, Default)]
 pub struct Vec3 {
     pub x: f32,
@@ -25,6 +27,25 @@ impl Vec3 {
 
     pub fn unit_vector(self) -> Vec3 {
         self / self.length()
+    }
+
+    pub fn random(min: f32, max: f32) -> Vec3 {
+        let mut rng = rand::thread_rng();
+        Vec3 {
+            x: rng.gen_range(min..max),
+            y: rng.gen_range(min..max),
+            z: rng.gen_range(min..max),
+        }
+    }
+
+    pub fn random_in_unit_sphere() -> Vec3 {
+        loop {
+            let p = Vec3::random(-1.0, 1.0);
+            if p.length_squared() >= 1.0 {
+                continue;
+            }
+            return p;
+        }
     }
 }
 
@@ -146,10 +167,7 @@ pub struct Sphere {
 
 impl Sphere {
     pub fn new(center: Point3, radius: f32) -> Sphere {
-        Sphere {
-            center,
-            radius,
-        }
+        Sphere { center, radius }
     }
 }
 
