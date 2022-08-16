@@ -6,6 +6,7 @@ use std::io::BufWriter;
 use std::path::Path;
 
 use log::error;
+use material::Lambertian;
 use pixels::{Error, Pixels, SurfaceTexture};
 use winit::dpi::LogicalSize;
 use winit::event::{Event, VirtualKeyCode};
@@ -15,10 +16,12 @@ use winit_input_helper::WinitInputHelper;
 
 // I'm not sure that I'm doing this correctly.
 mod util;
-use util::{HitRecord, Hittable, HittableList, Ray, Sphere, Vec3};
+use util::{Color, HitRecord, Hittable, HittableList, Ray, Sphere, Vec3};
 
 mod camera;
 use camera::Camera;
+
+mod material;
 
 use rand::Rng;
 
@@ -63,7 +66,7 @@ fn color_pixel(ray: &Ray, world: &HittableList, depth: i32) -> Vec3 {
     }
 
     if world.hit(*ray, 0.01, 99999999999.0, &mut rec) {
-        let target = rec.p + rec.normal + Vec3::random_unit_vector();
+        let target = rec.p + Vec3::random_in_hemisphere(rec.normal);
         let random_ray = Ray {
             origin: rec.p,
             direction: target - rec.p,
@@ -104,6 +107,9 @@ fn main() -> Result<(), Error> {
     let camera = Camera::new();
 
     let mut world = HittableList::new();
+    let material = Lambertian {
+        albedo: Color::new(0.8, 0.8, 0.0),
+    };
     world.add(Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5));
     world.add(Sphere::new(Vec3::new(0.0, -100.5, -1.0), 100.0));
 
@@ -117,7 +123,7 @@ fn main() -> Result<(), Error> {
     let mut encoder = png::Encoder::new(w, WIDTH, HEIGHT);
     encoder.set_color(png::ColorType::Rgba);
     encoder.set_depth(png::BitDepth::Eight);
-    encoder.set_trns(vec!(0xFFu8, 0xFFu8, 0xFFu8, 0xFFu8));
+    encoder.set_trns(vec![0xFFu8, 0xFFu8, 0xFFu8, 0xFFu8]);
 
     let mut image: Vec<u8> = Vec::new();
 

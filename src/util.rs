@@ -5,6 +5,9 @@ use std::ops::{Add, AddAssign, Div, Mul, Neg, Sub};
 
 use rand::Rng;
 
+use crate::material;
+use material::{Lambertian, Material};
+
 #[derive(Copy, Clone, Debug, Default)]
 pub struct Vec3 {
     pub x: f32,
@@ -51,6 +54,22 @@ impl Vec3 {
     pub fn random_unit_vector() -> Vec3 {
         // Not sure about this. Should maybe just be some util function outside of the impl.
         Self::random_in_unit_sphere().unit_vector()
+    }
+
+    pub fn random_in_hemisphere(normal: Vec3) -> Vec3 {
+        let in_unit_sphere = Self::random_in_unit_sphere();
+        // in the same hemisphere as normal
+        if in_unit_sphere * normal > 0.0 {
+            in_unit_sphere
+        } else {
+            -in_unit_sphere
+        }
+    }
+
+    pub fn near_zero(self) -> bool {
+        // return true if vector is close to zero is all dims
+        const S: f32 = 1e-8;
+        return f32::abs(self.x) < S && f32::abs(self.y) < S && f32::abs(self.z) < S;
     }
 }
 
@@ -127,6 +146,7 @@ impl Neg for Vec3 {
 }
 
 pub type Point3 = Vec3;
+pub type Color = Vec3;
 
 #[derive(Copy, Clone, Debug)]
 pub struct Ray {
@@ -140,13 +160,26 @@ impl Ray {
     }
 }
 
-#[derive(Clone, Copy, Default)]
+#[derive(Copy, Clone, Default)]
 pub struct HitRecord {
     pub p: Point3,
     pub normal: Vec3,
     pub t: f32,
     pub front_face: bool,
 }
+
+// This may not be the best method, I may be able to implement default
+// for the trait object inside HitRecord.
+// impl Default for HitRecord {
+//     fn default() -> Self {
+//         HitRecord {
+//             p: Point3::default(),
+//             normal: Vec3::default(),
+//             t: 0.0,
+//             front_face: false,
+//         }
+//     }
+// }
 
 impl HitRecord {
     pub fn set_face_normal(&mut self, ray: &Ray, outward_normal: Vec3) {
@@ -205,6 +238,7 @@ impl Hittable for Sphere {
 
         let outward_normal = (hit_record.p - self.center) / self.radius;
         hit_record.set_face_normal(&ray, outward_normal);
+        // hit_record.material = self.material;
 
         true
     }
