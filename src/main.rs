@@ -1,6 +1,10 @@
 #![deny(clippy::all)]
 #![forbid(unsafe_code)]
 
+use std::fs::File;
+use std::io::BufWriter;
+use std::path::Path;
+
 use log::error;
 use pixels::{Error, Pixels, SurfaceTexture};
 use winit::dpi::LogicalSize;
@@ -37,9 +41,11 @@ fn write_color(color: Vec3, samples_per_pixel: i32) -> Vec3 {
     let mut b = color.z;
 
     let scale = 1.0 / samples_per_pixel as f32;
-    r *= scale;
-    g *= scale;
-    b *= scale;
+
+    // sqrt is for gamma correction
+    r = f32::sqrt(r * scale);
+    g = f32::sqrt(g * scale);
+    b = f32::sqrt(b * scale);
 
     Vec3 {
         x: clamp(r, 0.0, 0.999) * 256.0,
@@ -56,8 +62,8 @@ fn color_pixel(ray: &Ray, world: &HittableList, depth: i32) -> Vec3 {
         return Vec3::new(0.0, 0.0, 0.0);
     }
 
-    if world.hit(*ray, 0.0, 99999999999.0, &mut rec) {
-        let target = rec.p + rec.normal + Vec3::random_in_unit_sphere();
+    if world.hit(*ray, 0.01, 99999999999.0, &mut rec) {
+        let target = rec.p + rec.normal + Vec3::random_unit_vector();
         let random_ray = Ray {
             origin: rec.p,
             direction: target - rec.p,
@@ -93,7 +99,7 @@ fn main() -> Result<(), Error> {
     //     Pixels::new(WIDTH, HEIGHT, surface_texture)?
     // };
 
-    let samples_per_pixel = 1;
+    let samples_per_pixel = 100;
 
     let camera = Camera::new();
 
@@ -103,8 +109,19 @@ fn main() -> Result<(), Error> {
 
     ////////////////////////
     let mut rng = rand::thread_rng();
-    println!("P3\n{} {}\n255\n", HEIGHT, WIDTH);
-    for j in 0..HEIGHT-1 {
+
+    let path = Path::new("image.png");
+    let file = File::create(path).unwrap();
+    let ref mut w = BufWriter::new(file);
+
+    let mut encoder = png::Encoder::new(w, WIDTH, HEIGHT);
+    encoder.set_color(png::ColorType::Rgba);
+    encoder.set_depth(png::BitDepth::Eight);
+    encoder.set_trns(vec!(0xFFu8, 0xFFu8, 0xFFu8, 0xFFu8));
+
+    let mut image: Vec<u8> = Vec::new();
+
+    for j in (0..HEIGHT).rev() {
         for i in 0..WIDTH {
             let mut pixel_color = Vec3::new(0.0, 0.0, 0.0);
             for _s in 0..samples_per_pixel {
@@ -124,9 +141,15 @@ fn main() -> Result<(), Error> {
             let ir = (color.x) as u8;
             let ig = (color.y) as u8;
             let ib = (color.z) as u8;
-            println!("{} {} {}\n", ir, ig, ib);
+            image.push(ir);
+            image.push(ig);
+            image.push(ib);
+            image.push(255);
         }
     }
+
+    let mut writer = encoder.write_header().unwrap();
+    writer.write_image_data(&image).unwrap();
     return Ok(());
     ///////////////////////////////
     // event_loop.run(move |event, _, control_flow| {

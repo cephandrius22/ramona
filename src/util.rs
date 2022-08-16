@@ -47,6 +47,11 @@ impl Vec3 {
             return p;
         }
     }
+
+    pub fn random_unit_vector() -> Vec3 {
+        // Not sure about this. Should maybe just be some util function outside of the impl.
+        Self::random_in_unit_sphere().unit_vector()
+    }
 }
 
 impl Add for Vec3 {
