@@ -59,13 +59,11 @@ fn write_color(color: Vec3, samples_per_pixel: i32) -> Vec3 {
 
 /// Determine the color of a pixel for a given ray.
 fn color_pixel(ray: &Ray, world: &HittableList, depth: i32) -> Vec3 {
-    let mut rec: HitRecord = HitRecord::default();
-
     if depth <= 0 {
         return Vec3::new(0.0, 0.0, 0.0);
     }
 
-    if world.hit(*ray, 0.01, 99999999999.0, &mut rec) {
+    if let Some(rec) = world.hit(*ray, 0.01, 99999999999.0) {
         let target = rec.p + Vec3::random_in_hemisphere(rec.normal);
         let random_ray = Ray {
             origin: rec.p,
