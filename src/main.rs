@@ -4,9 +4,10 @@
 use std::fs::File;
 use std::io::BufWriter;
 use std::path::Path;
+use std::rc::Rc;
 
 use log::error;
-use material::Lambertian;
+use material::{Lambertian,Metal};
 use pixels::{Error, Pixels, SurfaceTexture};
 use winit::dpi::LogicalSize;
 use winit::event::{Event, VirtualKeyCode};
@@ -64,6 +65,18 @@ fn color_pixel(ray: &Ray, world: &HittableList, depth: i32) -> Vec3 {
     }
 
     if let Some(rec) = world.hit(*ray, 0.01, 99999999999.0) {
+        if let Some((attenuation, scattered)) = rec.mat.scatter(ray, &rec) {
+            // Don't overload the * operator to do dot product...
+            let res = color_pixel(&scattered, world, depth - 1);
+            let vec = Vec3 {
+                x: res.x * attenuation.x,
+                y: res.y * attenuation.y,
+                z: res.z * attenuation.z,
+            };
+            return vec;
+        } else {
+            return Color::new(0.0, 0.0, 0.0);
+        }
         let target = rec.p + Vec3::random_in_hemisphere(rec.normal);
         let random_ray = Ray {
             origin: rec.p,
@@ -105,11 +118,25 @@ fn main() -> Result<(), Error> {
     let camera = Camera::new();
 
     let mut world = HittableList::new();
-    let material = Lambertian {
+    let material_ground = Lambertian {
         albedo: Color::new(0.8, 0.8, 0.0),
     };
-    world.add(Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5));
-    world.add(Sphere::new(Vec3::new(0.0, -100.5, -1.0), 100.0));
+    let material_center= Lambertian {
+        albedo: Color::new(0.7, 0.3, 0.3),
+    };
+
+    let material_left = Metal {
+        albedo: Color::new(0.8, 0.8, 0.8),
+    };
+
+    let material_right = Metal {
+        albedo: Color::new(0.8, 0.6, 0.2),
+    };
+
+    world.add(Sphere::new(Vec3::new(0.0, -100.5, -1.0), 100.0, Rc::new(material_ground)));
+    world.add(Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5, Rc::new(material_center)));
+    world.add(Sphere::new(Vec3::new(-1.0, 0.0, -1.0), 0.5, Rc::new(material_left)));
+    world.add(Sphere::new(Vec3::new(1.0, 0.0, -1.0), 0.5, Rc::new(material_right)));
 
     ////////////////////////
     let mut rng = rand::thread_rng();

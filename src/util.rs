@@ -1,7 +1,7 @@
 #![deny(clippy::all)]
 #![forbid(unsafe_code)]
 
-use std::ops::{Add, AddAssign, Div, Mul, Neg, Sub};
+use std::{ops::{Add, AddAssign, Div, Mul, Neg, Sub}, rc::Rc};
 
 use rand::Rng;
 
@@ -70,6 +70,10 @@ impl Vec3 {
         // return true if vector is close to zero is all dims
         const S: f32 = 1e-8;
         return f32::abs(self.x) < S && f32::abs(self.y) < S && f32::abs(self.z) < S;
+    }
+
+    pub fn reflect(self, n: Vec3) -> Vec3 {
+        self - n * ((self * n) * 2.0)
     }
 }
 
@@ -160,10 +164,11 @@ impl Ray {
     }
 }
 
-#[derive(Copy, Clone, Default)]
+#[derive(Clone)]
 pub struct HitRecord {
     pub p: Point3,
     pub normal: Vec3,
+    pub mat: Rc<dyn Material>,
     pub t: f32,
     pub front_face: bool,
 }
@@ -201,11 +206,12 @@ pub trait Hittable {
 pub struct Sphere {
     pub center: Point3,
     pub radius: f32,
+    pub mat: Rc<dyn Material>,
 }
 
 impl Sphere {
-    pub fn new(center: Point3, radius: f32) -> Sphere {
-        Sphere { center, radius }
+    pub fn new(center: Point3, radius: f32, material: Rc<dyn Material>) -> Sphere {
+        Sphere { center, radius, mat: material}
     }
 }
 
@@ -236,6 +242,7 @@ impl Hittable for Sphere {
         let mut rec = HitRecord {
             t: root,
             p: at_ray,
+            mat: self.mat.clone(),
             normal: (at_ray - self.center) / self.radius,
             front_face: false,
         };
