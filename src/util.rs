@@ -1,7 +1,10 @@
 #![deny(clippy::all)]
 #![forbid(unsafe_code)]
 
-use std::{ops::{Add, AddAssign, Div, Mul, Neg, Sub}, rc::Rc};
+use std::{
+    ops::{Add, AddAssign, Div, Mul, Neg, Sub},
+    rc::Rc,
+};
 
 use rand::Rng;
 
@@ -74,6 +77,14 @@ impl Vec3 {
 
     pub fn reflect(self, n: Vec3) -> Vec3 {
         self - n * ((self * n) * 2.0)
+    }
+
+    pub fn refract(self, normal: Vec3, etai_over_etat: f32) -> Vec3 {
+        let cos_theta = f32::min(-self * normal, 1.0);
+        let r_out_perp = (self + (normal * cos_theta)) * etai_over_etat;
+        let r_out_parallel = normal * -f32::sqrt(f32::abs(1.0 - r_out_perp.length_squared()));
+
+        r_out_perp + r_out_parallel
     }
 }
 
@@ -211,7 +222,11 @@ pub struct Sphere {
 
 impl Sphere {
     pub fn new(center: Point3, radius: f32, material: Rc<dyn Material>) -> Sphere {
-        Sphere { center, radius, mat: material}
+        Sphere {
+            center,
+            radius,
+            mat: material,
+        }
     }
 }
 

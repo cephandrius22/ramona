@@ -7,7 +7,7 @@ use std::path::Path;
 use std::rc::Rc;
 
 use log::error;
-use material::{Lambertian,Metal};
+use material::{Dialetric, Lambertian, Metal};
 use pixels::{Error, Pixels, SurfaceTexture};
 use winit::dpi::LogicalSize;
 use winit::event::{Event, VirtualKeyCode};
@@ -121,22 +121,49 @@ fn main() -> Result<(), Error> {
     let material_ground = Lambertian {
         albedo: Color::new(0.8, 0.8, 0.0),
     };
-    let material_center= Lambertian {
-        albedo: Color::new(0.7, 0.3, 0.3),
+    let material_center = Lambertian {
+        albedo: Color::new(0.1, 0.2, 0.5),
     };
 
-    let material_left = Metal {
-        albedo: Color::new(0.8, 0.8, 0.8),
+    // let material_left = Metal {
+    //     albedo: Color::new(0.8, 0.8, 0.8),
+    //     fuzz: 0.3,
+    // };
+    // let material_center = Dialetric{index_of_refraction: 1.5};
+    let material_left = Dialetric {
+        index_of_refraction: 1.5,
     };
 
     let material_right = Metal {
         albedo: Color::new(0.8, 0.6, 0.2),
+        fuzz: 0.0,
     };
 
-    world.add(Sphere::new(Vec3::new(0.0, -100.5, -1.0), 100.0, Rc::new(material_ground)));
-    world.add(Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5, Rc::new(material_center)));
-    world.add(Sphere::new(Vec3::new(-1.0, 0.0, -1.0), 0.5, Rc::new(material_left)));
-    world.add(Sphere::new(Vec3::new(1.0, 0.0, -1.0), 0.5, Rc::new(material_right)));
+    world.add(Sphere::new(
+        Vec3::new(0.0, -100.5, -1.0),
+        100.0,
+        Rc::new(material_ground),
+    ));
+    world.add(Sphere::new(
+        Vec3::new(0.0, 0.0, -1.0),
+        0.5,
+        Rc::new(material_center),
+    ));
+    world.add(Sphere::new(
+        Vec3::new(-1.0, 0.0, -1.0),
+        0.5,
+        Rc::new(material_left),
+    ));
+    world.add(Sphere::new(
+        Vec3::new(-1.0, 0.0, -1.0),
+        -0.4,
+        Rc::new(material_left),
+    ));
+    world.add(Sphere::new(
+        Vec3::new(1.0, 0.0, -1.0),
+        0.5,
+        Rc::new(material_right),
+    ));
 
     ////////////////////////
     let mut rng = rand::thread_rng();
