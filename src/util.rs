@@ -6,7 +6,7 @@ use std::{
     rc::Rc,
 };
 
-use rand::Rng;
+use rand::{random, Rng};
 
 use crate::material;
 use material::{Lambertian, Material};
@@ -69,6 +69,17 @@ impl Vec3 {
         }
     }
 
+    pub fn random_in_unit_disk() -> Vec3 {
+        loop {
+            let mut rng = rand::thread_rng();
+            let p = Vec3::new(rng.gen_range(-1.0..1.0), rng.gen_range(-1.0..1.0), 0.0);
+            if p.length_squared() >= 1.0 {
+                continue;
+            }
+            return p;
+        }
+    }
+
     pub fn near_zero(self) -> bool {
         // return true if vector is close to zero is all dims
         const S: f32 = 1e-8;
@@ -85,6 +96,14 @@ impl Vec3 {
         let r_out_parallel = normal * -f32::sqrt(f32::abs(1.0 - r_out_perp.length_squared()));
 
         r_out_perp + r_out_parallel
+    }
+
+    pub fn cross(self, other: Vec3) -> Vec3 {
+        Vec3::new(
+            self.y * other.z - self.z * other.y,
+            self.z * other.x - self.x * other.z,
+            self.x * other.y - self.y * other.x,
+        )
     }
 }
 

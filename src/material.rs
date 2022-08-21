@@ -78,7 +78,9 @@ impl Material for Dialetric {
 
         let mut rng = rand::thread_rng();
         let cannot_refarct = refration_ratio * sin_theta > 1.0;
-        let direction = if cannot_refarct || reflectance(cos_theta, refration_ratio) > rng.gen_range(0.0..1.0) {
+        let direction = if cannot_refarct
+            || reflectance(cos_theta, refration_ratio) > rng.gen_range(0.0..1.0)
+        {
             unit_direction.reflect(rec.normal)
         } else {
             unit_direction.refract(rec.normal, refration_ratio)
@@ -93,4 +95,3 @@ impl Material for Dialetric {
         ));
     }
 }
-

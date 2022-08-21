@@ -17,7 +17,7 @@ use winit_input_helper::WinitInputHelper;
 
 // I'm not sure that I'm doing this correctly.
 mod util;
-use util::{Color, HitRecord, Hittable, HittableList, Ray, Sphere, Vec3};
+use util::{Color, HitRecord, Hittable, HittableList, Point3, Ray, Sphere, Vec3};
 
 mod camera;
 use camera::Camera;
@@ -25,9 +25,6 @@ use camera::Camera;
 mod material;
 
 use rand::Rng;
-
-const WIDTH: u32 = 800;
-const HEIGHT: u32 = 450;
 
 fn clamp(x: f32, min: f32, max: f32) -> f32 {
     if x < min {
@@ -113,57 +110,94 @@ fn main() -> Result<(), Error> {
     //     Pixels::new(WIDTH, HEIGHT, surface_texture)?
     // };
 
-    let samples_per_pixel = 100;
+    let samples_per_pixel = 50;
 
-    let camera = Camera::new();
+    let mut rng = rand::thread_rng();
+    let aspect_ratio = 3.0 / 2.0;
+    let WIDTH: u32 = 1200;
+    let HEIGHT: u32 = (WIDTH as f32 / aspect_ratio) as u32;
+
+    let lookfrom = Point3::new(13.0, 2.0, 3.0);
+    let lookat = Point3::new(0.0, 0.0, 0.0);
+    let vup = Vec3::new(0.0, 1.0, 0.0);
+
+    let camera = Camera::new(
+        lookfrom,
+        lookat,
+        vup,
+        20.0,
+        WIDTH as f32 / HEIGHT as f32,
+        0.1,
+        10.0,
+    );
 
     let mut world = HittableList::new();
+
     let material_ground = Lambertian {
-        albedo: Color::new(0.8, 0.8, 0.0),
+        albedo: Color::new(0.5, 0.5, 0.5),
     };
-    let material_center = Lambertian {
-        albedo: Color::new(0.1, 0.2, 0.5),
-    };
-
-    // let material_left = Metal {
-    //     albedo: Color::new(0.8, 0.8, 0.8),
-    //     fuzz: 0.3,
-    // };
-    // let material_center = Dialetric{index_of_refraction: 1.5};
-    let material_left = Dialetric {
-        index_of_refraction: 1.5,
-    };
-
-    let material_right = Metal {
-        albedo: Color::new(0.8, 0.6, 0.2),
-        fuzz: 0.0,
-    };
-
     world.add(Sphere::new(
-        Vec3::new(0.0, -100.5, -1.0),
-        100.0,
+        Point3::new(0.0, -1000.0, 0.0),
+        1000.0,
         Rc::new(material_ground),
     ));
-    world.add(Sphere::new(
-        Vec3::new(0.0, 0.0, -1.0),
-        0.5,
-        Rc::new(material_center),
-    ));
-    world.add(Sphere::new(
-        Vec3::new(-1.0, 0.0, -1.0),
-        0.5,
-        Rc::new(material_left),
-    ));
-    world.add(Sphere::new(
-        Vec3::new(-1.0, 0.0, -1.0),
-        -0.4,
-        Rc::new(material_left),
-    ));
-    world.add(Sphere::new(
-        Vec3::new(1.0, 0.0, -1.0),
-        0.5,
-        Rc::new(material_right),
-    ));
+
+    for a in -11..11 {
+        for b in -11..11 {
+            let choose_mat = rng.gen_range(0.0..1.0);
+            let center = Point3::new(
+                a as f32 + (0.9 * rng.gen_range(0.0..1.0)),
+                0.2,
+                b as f32 + (0.9 * rng.gen_range(0.0..1.0)),
+            );
+
+            if (center - Point3::new(4.0, 0.2, 0.0)).length() > 0.9 {
+                if choose_mat < 0.8 {
+                    let albedo = Color::random(0.0, 1.0) - Color::random(0.0, 1.0);
+                    let sphere_material = Lambertian { albedo };
+                    world.add(Sphere::new(center, 0.2, Rc::new(sphere_material)));
+                } else if choose_mat < 0.95 {
+                    let albedo = Color::random(0.5, 1.0);
+                    let fuzz = rng.gen_range(0.0..0.5);
+                    let sphere_material = Metal { albedo, fuzz };
+                    world.add(Sphere::new(center, 0.2, Rc::new(sphere_material)));
+                } else {
+                    let sphere_material = Dialetric {
+                        index_of_refraction: 1.5,
+                    };
+                    world.add(Sphere::new(center, 0.2, Rc::new(sphere_material)));
+                }
+            }
+        }
+
+        let material1 = Dialetric {
+            index_of_refraction: 1.5,
+        };
+        world.add(Sphere::new(
+            Point3::new(0.0, 1.0, 0.0),
+            1.0,
+            Rc::new(material1),
+        ));
+
+        let material2 = Lambertian {
+            albedo: Color::new(0.4, 0.2, 0.1),
+        };
+        world.add(Sphere::new(
+            Point3::new(-4.0, 1.0, 0.0),
+            1.0,
+            Rc::new(material2),
+        ));
+
+        let material3 = Metal {
+            albedo: Color::new(0.7, 0.6, 0.5),
+            fuzz: 0.0,
+        };
+        world.add(Sphere::new(
+            Point3::new(4.0, 1.0, 0.0),
+            1.0,
+            Rc::new(material3),
+        ));
+    }
 
     ////////////////////////
     let mut rng = rand::thread_rng();
