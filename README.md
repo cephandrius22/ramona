@@ -11,5 +11,5 @@ force me to have some sane code architecture to support multiple renderers which
 I want to focus on.
 
 ### TODO
-- [ ] Finish Raytracking in One Weekend (this seems like a good stopping point to begin the other tasks)
+- [X] Finish Raytracking in One Weekend (this seems like a good stopping point to begin the other tasks)
 - [ ] Implement some other renderer (Metal may be a good first choice)
