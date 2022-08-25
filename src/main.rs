@@ -36,7 +36,7 @@ fn clamp(x: f32, min: f32, max: f32) -> f32 {
     x
 }
 
-fn write_color(color: Vec3, samples_per_pixel: i32) -> Vec3 {
+fn calculate_color(color: Vec3, samples_per_pixel: i32) -> Vec3 {
     let mut r = color.x;
     let mut g = color.y;
     let mut b = color.z;
@@ -229,7 +229,7 @@ fn main() -> Result<(), Error> {
                 pixel_color += color_pixel(&ray, &world, 50);
             }
 
-            let color = write_color(pixel_color, samples_per_pixel);
+            let color = calculate_color(pixel_color, samples_per_pixel);
             let ir = (color.x) as u8;
             let ig = (color.y) as u8;
             let ib = (color.z) as u8;
@@ -270,7 +270,7 @@ fn main() -> Result<(), Error> {
     //                 pixel_color += color_pixel(&ray, &world, 50);
     //             }
 
-    //             let color = write_color(pixel_color, samples_per_pixel);
+    //             let color = calculate_color(pixel_color, samples_per_pixel);
     //             let ir = (color.x) as u8;
     //             let ig = (color.y) as u8;
     //             let ib = (color.z) as u8;
