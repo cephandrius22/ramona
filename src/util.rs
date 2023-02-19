@@ -6,10 +6,10 @@ use std::{
     rc::Rc,
 };
 
-use rand::{random, Rng};
+use rand::{Rng};
 
 use crate::material;
-use material::{Lambertian, Material};
+use material::{Material};
 
 #[derive(Copy, Clone, Debug, Default)]
 pub struct Vec3 {
@@ -83,7 +83,10 @@ impl Vec3 {
     pub fn near_zero(self) -> bool {
         // return true if vector is close to zero is all dims
         const S: f32 = 1e-8;
-        return f32::abs(self.x) < S && f32::abs(self.y) < S && f32::abs(self.z) < S;
+        
+        f32::abs(self.x) < S &&
+            f32::abs(self.y) < S &&
+            f32::abs(self.z) < S
     }
 
     pub fn reflect(self, n: Vec3) -> Vec3 {
@@ -202,19 +205,6 @@ pub struct HitRecord {
     pub t: f32,
     pub front_face: bool,
 }
-
-// This may not be the best method, I may be able to implement default
-// for the trait object inside HitRecord.
-// impl Default for HitRecord {
-//     fn default() -> Self {
-//         HitRecord {
-//             p: Point3::default(),
-//             normal: Vec3::default(),
-//             t: 0.0,
-//             front_face: false,
-//         }
-//     }
-// }
 
 impl HitRecord {
     pub fn set_face_normal(&mut self, ray: &Ray, outward_normal: Vec3) {
