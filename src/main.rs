@@ -10,11 +10,20 @@ mod material;
 use material::{Dialetric, Lambertian, Metal};
 
 // I'm not sure that I'm doing this correctly.
-mod util;
-use util::{Color, Hittable, HittableList, Point3, Ray, Sphere, Vec3};
+mod vec3;
+use vec3::{Color, Point3, Vec3};
+
+mod sphere;
+use sphere::Sphere;
+
+mod hittable;
+use hittable::{Hittable, HittableList};
 
 mod camera;
 use camera::Camera;
+
+mod rayhit;
+use rayhit::Ray;
 
 use rand::{rngs::ThreadRng, Rng};
 

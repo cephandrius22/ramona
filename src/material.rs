@@ -1,6 +1,7 @@
 use rand::Rng;
 
-use crate::util::{Color, HitRecord, Ray, Vec3};
+use crate::vec3::{Color, Vec3};
+use crate::rayhit::{HitRecord, Ray};
 
 pub trait Material {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray)>;

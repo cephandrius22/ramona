@@ -1,14 +1,9 @@
 #![deny(clippy::all)]
 #![forbid(unsafe_code)]
 
-use std::{
-    ops::{Add, AddAssign, Div, Mul, Neg, Sub},
-    rc::Rc,
-};
+use std::ops::{Add, AddAssign, Div, Mul, Neg, Sub};
 
 use rand::Rng;
-
-use crate::material::Material;
 
 #[derive(Copy, Clone, Debug, Default)]
 pub struct Vec3 {
@@ -181,136 +176,64 @@ impl Neg for Vec3 {
     }
 }
 
+impl PartialEq for Vec3 {
+    fn eq(&self, other: &Self) -> bool {
+        self.x == other.x &&
+            self.y == other.y &&
+            self.z == other.z
+    }
+}
+
 pub type Point3 = Vec3;
 pub type Color = Vec3;
 
-#[derive(Copy, Clone, Debug)]
-pub struct Ray {
-    pub origin: Point3,
-    pub direction: Vec3,
-}
 
-impl Ray {
-    pub fn at(self, t: f32) -> Point3 {
-        self.origin + (self.direction * t)
-    }
-}
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-#[derive(Clone)]
-pub struct HitRecord {
-    pub p: Point3,
-    pub normal: Vec3,
-    pub mat: Rc<dyn Material>,
-    pub t: f32,
-    pub front_face: bool,
-}
+    #[test]
+    fn test_add() {
+        let a = Vec3::new(2.0, 4.0, 6.0);
+        let b = Vec3::new(1.0, 2.0, 3.0);
 
-impl HitRecord {
-    pub fn set_face_normal(&mut self, ray: &Ray, outward_normal: Vec3) {
-        // dot product of ray and outward normal tells us if we are hitting
-        // the inside or ouside of the surface.
-        self.front_face = (ray.direction * outward_normal) < 0.0;
-        self.normal = if self.front_face {
-            outward_normal
-        } else {
-            -outward_normal
-        };
-    }
-}
-
-pub trait Hittable {
-    fn hit(&self, ray: Ray, t_min: f32, t_max: f32) -> Option<HitRecord>;
-}
-
-pub struct Sphere {
-    pub center: Point3,
-    pub radius: f32,
-    pub mat: Rc<dyn Material>,
-}
-
-impl Sphere {
-    pub fn new(center: Point3, radius: f32, material: Rc<dyn Material>) -> Sphere {
-        Sphere {
-            center,
-            radius,
-            mat: material,
-        }
-    }
-}
-
-impl Hittable for Sphere {
-    fn hit(&self, ray: Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
-        let oc: Vec3 = ray.origin - self.center;
-        let a = ray.direction.length_squared();
-        let half_b = oc * ray.direction;
-        let c = (oc.length_squared()) - (self.radius * self.radius);
-
-        let discriminant: f32 = (half_b * half_b) - (a * c);
-
-        // no roots (negative discriminant) = no intersction
-        if discriminant < 0.0 {
-            return None;
-        }
-        let sqrtd = f32::sqrt(discriminant);
-
-        let mut root = (-half_b - sqrtd) / a;
-        if root < t_min || root > t_max {
-            root = (-half_b + sqrtd) / a;
-            if root < t_min || root > t_max {
-                return None;
-            }
-        }
-
-        let at_ray = ray.at(root);
-        let mut rec = HitRecord {
-            t: root,
-            p: at_ray,
-            mat: self.mat.clone(),
-            normal: (at_ray - self.center) / self.radius,
-            front_face: false,
-        };
-
-        let outward_normal = (rec.p - self.center) / self.radius;
-        rec.set_face_normal(&ray, outward_normal);
-        // hit_record.material = self.material;
-
-        Some(rec)
-    }
-}
-
-pub struct HittableList {
-    // A vector of objects that implement the Hittable trait.
-    // Box is needed because Hittable objects can be of different
-    // sizes.
-    objects: Vec<Box<dyn Hittable>>,
-}
-
-impl HittableList {
-    pub fn new() -> HittableList {
-        HittableList {
-            objects: Vec::new(),
-        }
+        assert_eq!(a + b, Vec3::new(3.0, 6.0, 9.0))
     }
 
-    pub fn add(&mut self, object: impl Hittable + 'static) {
-        // I'm not 100% clear on if this is the correct way to do
-        // this.
-        self.objects.push(Box::new(object) as Box<dyn Hittable>);
+    #[test]
+    fn test_add_assign() {
+        let mut a = Vec3::new(2.0, 4.0, 6.0);
+        a += Vec3::new(1.0, 2.0, 3.0);
+
+        assert_eq!(a, Vec3::new(3.0, 6.0, 9.0))
     }
-}
 
-impl Hittable for HittableList {
-    fn hit(&self, ray: Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
-        let mut temp_rec = None;
-        let mut closest_so_far = t_max;
+    #[test]
+    fn test_sub() {
+        let a = Vec3::new(2.0, 4.0, 6.0);
+        let b = Vec3::new(1.0, 2.0, 3.0);
 
-        for object in &self.objects {
-            if let Some(rec) = object.hit(ray, t_min, closest_so_far) {
-                closest_so_far = rec.t;
-                temp_rec = Some(rec);
-            }
-        }
+        assert_eq!(a - b, Vec3::new(1.0, 2.0, 3.0))
+    }
 
-        temp_rec
+    #[test]
+    fn test_mult() {
+        let a = Vec3::new(2.0, 4.0, 6.0);
+
+        assert_eq!(a * 2.0, Vec3::new(4.0, 8.0, 12.0))
+    }
+
+    #[test]
+    fn test_div() {
+        let a = Vec3::new(2.0, 4.0, 6.0);
+
+        assert_eq!(a / 2.0, Vec3::new(1.0, 2.0, 3.0))
+    }
+
+    #[test]
+    fn test_neg() {
+        let a = Vec3::new(2.0, 4.0, 6.0);
+
+        assert_eq!(-a, Vec3::new(-2.0, -4.0, -6.0))
     }
 }
