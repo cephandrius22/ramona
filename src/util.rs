@@ -6,10 +6,9 @@ use std::{
     rc::Rc,
 };
 
-use rand::{Rng};
+use rand::Rng;
 
-use crate::material;
-use material::{Material};
+use crate::material::Material;
 
 #[derive(Copy, Clone, Debug, Default)]
 pub struct Vec3 {

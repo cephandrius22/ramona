@@ -1,13 +1,13 @@
 #![deny(clippy::all)]
 #![forbid(unsafe_code)]
 
-use std::fs::File;
+use std::{fs::File, io::Error};
 use std::io::BufWriter;
 use std::path::Path;
 use std::rc::Rc;
 
+mod material;
 use material::{Dialetric, Lambertian, Metal};
-use pixels::Error;
 
 // I'm not sure that I'm doing this correctly.
 mod util;
@@ -15,8 +15,6 @@ use util::{Color, Hittable, HittableList, Point3, Ray, Sphere, Vec3};
 
 mod camera;
 use camera::Camera;
-
-mod material;
 
 use rand::{rngs::ThreadRng, Rng};
 
