@@ -12,4 +12,8 @@ I want to focus on.
 
 ### TODO
 - [X] Finish Raytracing in One Weekend (this seems like a good stopping point to begin the other tasks)
+- [ ] Implement parallelism
+- [ ] Shadows
+- [ ] Triangles
+- [ ] Textures
 - [ ] Implement some other renderer (Metal may be a good first choice)
